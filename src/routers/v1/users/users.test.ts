@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { compare } from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 
 import app from '../../..';
@@ -93,5 +94,42 @@ describe('Users Router', () => {
         expect(response.status).toBe(StatusCodes.OK);
         expect(mockClient.query).toHaveBeenCalledTimes(1);
         expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    test('POST /login - should return 404 if user not found', async () => {
+        mockClient.query
+            .mockResolvedValueOnce({rows: []});
+        const response = await request(app)
+            .post('/v1/users/login')
+            .send({ email: STUB_USER.email, password: STUB_USER.password });
+        expect(response.status).toBe(StatusCodes.NOT_FOUND);
+        expect(mockClient.query).toHaveBeenCalledTimes(1);
+        expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    test('POST /login - should return 401 if password is not unauthorized', async () => {
+        mockClient.query
+            .mockResolvedValueOnce({rows: [{...STUB_USER, password: STUB_USER_WITH_HASHED_PASSWORD}]});
+        (compare as jest.Mock).mockResolvedValueOnce(false);
+        const response = await request(app)
+            .post('/v1/users/login')
+            .send({ email: STUB_USER.email, password: 'unauthorized_password' });
+        expect(response.status).toBe(StatusCodes.UNAUTHORIZED);
+        expect(mockClient.query).toHaveBeenCalledTimes(1);
+        expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    test('POST /login - should return 400 if email is not valid', async () => {
+        const response = await request(app)
+            .post('/v1/users/login')
+            .send({...STUB_USER, email: 'invalid_email'});
+        expect(response.status).toBe(StatusCodes.BAD_REQUEST);
+    });
+
+    test('POST /login - should return 400 if password is not valid', async () => {
+        const response = await request(app)
+            .post('/v1/users/login')
+            .send({...STUB_USER, password: '123'});
+        expect(response.status).toBe(StatusCodes.BAD_REQUEST);
     });
 });

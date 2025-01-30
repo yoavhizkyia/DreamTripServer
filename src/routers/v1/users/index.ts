@@ -59,6 +59,7 @@ userRouter.post('/login', validateData(userLoginSchema), async (req, res) => {
 
         if (!user) {
             res.sendStatus(StatusCodes.NOT_FOUND);
+            return;
         }
 
         const isValid = await compare(password, user.password);
