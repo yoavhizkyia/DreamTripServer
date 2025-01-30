@@ -1,7 +1,10 @@
+import cors from 'cors';
 import express, { json } from 'express';
+
 import v1Router from './routers/v1';
 
 const app = express();
+app.use(cors());
 app.use(json());
 
 app.use('/v1', v1Router);
