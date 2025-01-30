@@ -1,12 +1,15 @@
 import { Router } from "express";
 import { compare, hash } from "bcrypt";
+import { StatusCodes } from 'http-status-codes';
 
 import pool from "../../../config/db";
+import { validateData } from "../../../middleware";
+import { userLoginSchema, userRegistrationSchema } from "./userScemas";
 
 export const userRouter = Router();
 
 const createUser = 'INSERT INTO users (user_name, email, password) VALUES ($1, $2, $3)';
-const getUser = 'SELECT * FROM users WHERE user_name = $1';
+const getUserByEmail = 'SELECT * FROM users WHERE email = $1';
 
 userRouter.get('/', async (req, res) => {
     const client = await pool.connect();
@@ -24,52 +27,51 @@ userRouter.get('/', async (req, res) => {
     }
 });
 
-userRouter.post('/signup', async (req, res) => {
-    const { email, password } = req.body;
+userRouter.post('/signup', validateData(userRegistrationSchema), async (req, res) => {
+    const { email, password, username } = req.body;
     
     const client = await pool.connect();
     try {
-        const username = req.body.username.trim();
-        const res1 = await client.query(getUser, [username]);
-        if (res1.rows[0]) {
-            res.sendStatus(409);
+        const user = await client.query(getUserByEmail, [email]);
+        if (user.rows[0]) {
+            res.sendStatus(StatusCodes.CONFLICT);
             return
         }
         const hashedPassword = await hash(password, 10);
         await client.query(createUser, [username, email, hashedPassword]);
-        res.sendStatus(201);
+        res.sendStatus(StatusCodes.CREATED);
     }
     catch (err) {
         console.error(err);
-        res.sendStatus(500);
+        res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
     }
     finally {
         await client.release();
     }
 })
 
-userRouter.post('/login', async (req, res) => {
-    const { username, password } = req.body;
+userRouter.post('/login', validateData(userLoginSchema), async (req, res) => {
+    const { email, password } = req.body;
 
     const client = await pool.connect();
     try {
-        const user = (await client.query(getUser, [username])).rows[0];
+        const user = (await client.query(getUserByEmail, [email])).rows[0];
 
         if (!user) {
-            res.sendStatus(404);
+            res.sendStatus(StatusCodes.NOT_FOUND);
         }
 
         const isValid = await compare(password, user.password);
         if (!isValid) {
-            res.sendStatus(401);
+            res.sendStatus(StatusCodes.UNAUTHORIZED);
         }
         else {
-            res.sendStatus(200);
+            res.sendStatus(StatusCodes.OK);
         }
     }
     catch (err) {
         console.error(err);
-        res.sendStatus(500)
+        res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
     }
     finally {
         await client.release();
