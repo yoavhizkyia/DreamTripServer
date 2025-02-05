@@ -1,6 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
 import { z, ZodError } from 'zod';
 import { StatusCodes } from 'http-status-codes';
+import { JwtPayload } from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express';
+
+import { verifyToken } from '../jwt';
 
 export const validateData = (schema: z.ZodObject<any, any>) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -19,3 +22,14 @@ export const validateData = (schema: z.ZodObject<any, any>) => {
     }
   };
 }
+
+export const authMiddleware = (req: any, res: any, next: any) => {
+  const token = req.cookies.accessToken;
+  if (!token) return res.status(StatusCodes.UNAUTHORIZED).json({ message: "Unauthorized" });
+
+  const decoded = verifyToken(token) as JwtPayload;
+  if (!decoded) return res.status(StatusCodes.FORBIDDEN).json({ message: "Invalid token" });
+
+  req.userId = decoded.userId;
+  next();
+};

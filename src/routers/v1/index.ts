@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { userRouter } from "./users";
+import userRouter from "./users";
 
 export const v1Router = Router();
 
