@@ -2,13 +2,13 @@ import 'dotenv/config'
 import { Router } from 'express';
 import { compare, hash } from 'bcrypt';
 import { JwtPayload } from 'jsonwebtoken';
-import { StatusCodes } from 'http-status-codes';
 import { Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
 
 import pool from '../../../config/db';
-import { authMiddleware, validateData } from '../../../middleware';
-import { userLoginSchema, userRegistrationSchema } from './userScemas';
 import { generateToken, verifyToken } from '../../../jwt';
+import { authMiddleware, validateData } from '../../../middleware';
+import {userRegistrationSchema, userLoginSchema } from './userScemas';
 
 const userRouter = Router();
 
@@ -16,7 +16,13 @@ const createUser = 'INSERT INTO users (user_name, email, password) VALUES ($1, $
 const getUserByEmail = 'SELECT * FROM users WHERE email = $1';
 const getUserById = 'SELECT * FROM users WHERE id = $1';
 
-const cookieOptions: { httpOnly: boolean; secure: boolean; sameSite: boolean | 'strict' } = {
+interface CookieOptions { 
+    httpOnly: boolean; 
+    secure: boolean; 
+    sameSite: boolean | 'strict';
+}
+
+const cookieOptions: CookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict'
@@ -27,22 +33,6 @@ const REFRESH_TOKEN_EXPIRED = '7d';
 
 const ONE_HOUR = 60 * 60 * 1000;
 const WEEK = 7 * 24 * 60 * 60 * 1000;
-
-userRouter.get('/', async (req, res) => {
-    const client = await pool.connect();
-
-    try {
-        const res1 = await client.query('SELECT * FROM users')
-        res.json(res1.rows);
-    }
-    catch (err) {
-        console.error(err);
-        res.status(500)
-    }
-    finally {
-        await client.release();
-    }
-});
 
 userRouter.post('/signup', validateData(userRegistrationSchema), async (req: Request, res: Response) => {
     const { email, password, username } = req.body;
@@ -61,7 +51,7 @@ userRouter.post('/signup', validateData(userRegistrationSchema), async (req: Req
         res.status(StatusCodes.CREATED).json({ message: 'User created' });
     }
     catch (err) {
-        console.error(err);
+        console.error('Error in /signup, the error is: ', err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Something went wrong' });
     }
     finally {
@@ -100,7 +90,7 @@ userRouter.post('/login', validateData(userLoginSchema), async (req: Request, re
         }
     }
     catch (err) {
-        console.error(err);
+        console.error('Error in /login, the error is: ',err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Something went wrong' });
     }
     finally {
@@ -120,7 +110,7 @@ userRouter.get('/auth', authMiddleware, async (req: any, res: any) => {
         res.json({ id: user.id, email: user.email });
     }
     catch (err) {
-        console.error(err);
+        console.error('Error in /auth, the error is: ',err);
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: 'Something went wrong' });
     }
     finally {

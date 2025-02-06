@@ -30,6 +30,6 @@ export const authMiddleware = (req: any, res: any, next: any) => {
   const decoded = verifyToken(token) as JwtPayload;
   if (!decoded) return res.status(StatusCodes.FORBIDDEN).json({ message: "Invalid token" });
 
-  req.userId = decoded.userId;
+  req.email = decoded.email;
   next();
 };
