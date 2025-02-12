@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import cors from 'cors';
 import express, { json } from 'express';
 import cookieParser from 'cookie-parser';
@@ -14,9 +15,13 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use('/health', (req, res) => {
+  res.send('Ok')
+})
+
 app.use('/v1', v1Router);
 
-app.listen(8080, () => {
+app.listen(process.env.PORT, () => {
   console.log('Server is running on port 8080');
 });
 
