@@ -4,7 +4,9 @@
   "main": "src/index.ts",
   "scripts": {
     "start": "nodemon --exec ts-node src/index.ts",
-    "test": "jest"
+    "typecheck": "tsc --watch",
+    "test": "jest",
+    "build": "tsc"
   },
   "author": "",
   "license": "ISC",

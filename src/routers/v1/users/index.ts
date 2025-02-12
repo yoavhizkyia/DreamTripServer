@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import { Router } from 'express';
 import { compare, hash } from 'bcrypt';
 import { JwtPayload } from 'jsonwebtoken';

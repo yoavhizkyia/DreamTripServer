@@ -1,10 +1,22 @@
+import 'dotenv/config'
 import { Pool } from 'pg';
 
-export const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  password: '1234',
-  port: 5433,
+const poolOptionsConfig = {
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT ? +process.env.DB_PORT : 5432,
+}
+
+const pool = new Pool({
+  ...poolOptionsConfig
 });
 
-export default pool;
+const productionPool = new Pool({
+  ...poolOptionsConfig,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+export default process.env.DB_HOST !== 'localhost' ? productionPool : pool;
