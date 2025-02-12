@@ -12,7 +12,7 @@ env:
   ECR_REPOSITORY: dreamtripserver           
   ECS_SERVICE: DreamTripServer                
   ECS_CLUSTER: DreamTrip                 
-  ECS_TASK_DEFINITION: ./awsTaskDefinition.json 
+  ECS_TASK_DEFINITION: awsTaskDefinition.json 
   CONTAINER_NAME: DreamTripServer
 
 permissions:
