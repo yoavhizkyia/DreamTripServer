@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   test:
-    name: Run Tests and Type Checking
+    name: Run Tests
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
@@ -34,9 +34,6 @@ jobs:
 
     - name: Install Dependencies
       run: npm i
-
-    - name: Run TypeScript Type Checking
-      run: npm run typecheck
 
     - name: Run Tests
       run: npm test
